@@ -1,16 +1,15 @@
-
 'use strict';
 
-const util = require('util');
+import util from 'util';
 
-const db = require('./database');
-const utils = require('./utils');
+import db from './database';
+import utils from './utils';
 
-const DEFAULT_BATCH_SIZE = 100;
+const DEFAULT_BATCH_SIZE: number = 100;
 
-const sleep = util.promisify(setTimeout);
+const sleep: (ms: number) => Promise<void> = util.promisify(setTimeout);
 
-exports.processSortedSet = async function (setKey, process, options) {
+exports.processSortedSet = async function (setKey: string, process, options): Promise<void> {
     options = options || {};
 
     if (typeof process !== 'function') {
@@ -56,7 +55,7 @@ exports.processSortedSet = async function (setKey, process, options) {
     }
 };
 
-exports.processArray = async function (array, process, options) {
+exports.processArray = async function (array, process, options): Promise<void> {
     options = options || {};
 
     if (!Array.isArray(array) || !array.length) {
