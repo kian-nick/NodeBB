@@ -9,7 +9,16 @@ const DEFAULT_BATCH_SIZE: number = 100;
 
 const sleep: (ms: number) => Promise<void> = util.promisify(setTimeout);
 
-exports.processSortedSet = async function (setKey: string, process, options): Promise<void> {
+interface Options {
+    progress?: any; // to do
+    batch?: number;
+    doneIf?: Function; 
+    alwaysStartAt?: number;
+    withScores?: boolean;
+    interval?: number;
+}
+
+exports.processSortedSet = async function (setKey: string, process: Function, options: Options): Promise<void> {
     options = options || {};
 
     if (typeof process !== 'function') {
@@ -28,11 +37,11 @@ exports.processSortedSet = async function (setKey: string, process, options): Pr
         return await db.processSortedSet(setKey, process, options);
     }
 
-    // custom done condition
+    // custom done condition (currently not used anywhere)
     options.doneIf = typeof options.doneIf === 'function' ? options.doneIf : function () {};
 
-    let start = 0;
-    let stop = options.batch - 1;
+    let start: number = 0;
+    let stop: number = options.batch - 1;
 
     if (process && process.constructor && process.constructor.name !== 'AsyncFunction') {
         process = util.promisify(process);
@@ -40,7 +49,7 @@ exports.processSortedSet = async function (setKey: string, process, options): Pr
 
     while (true) {
         /* eslint-disable no-await-in-loop */
-        const ids = await db[`getSortedSetRange${options.withScores ? 'WithScores' : ''}`](setKey, start, stop);
+        const ids: number[] = await db[`getSortedSetRange${options.withScores ? 'WithScores' : ''}`](setKey, start, stop);
         if (!ids.length || options.doneIf(start, stop, ids)) {
             return;
         }
@@ -55,7 +64,7 @@ exports.processSortedSet = async function (setKey: string, process, options): Pr
     }
 };
 
-exports.processArray = async function (array, process, options): Promise<void> {
+exports.processArray = async function (array: any[], process: any, options: Options): Promise<void> {
     options = options || {};
 
     if (!Array.isArray(array) || !array.length) {
@@ -65,14 +74,14 @@ exports.processArray = async function (array, process, options): Promise<void> {
         throw new Error('[[error:process-not-a-function]]');
     }
 
-    const batch = options.batch || DEFAULT_BATCH_SIZE;
-    let start = 0;
+    const batch: number = options.batch || DEFAULT_BATCH_SIZE;
+    let start: number = 0;
     if (process && process.constructor && process.constructor.name !== 'AsyncFunction') {
         process = util.promisify(process);
     }
 
     while (true) {
-        const currentBatch = array.slice(start, start + batch);
+        const currentBatch: any[] = array.slice(start, start + batch);
 
         if (!currentBatch.length) {
             return;
